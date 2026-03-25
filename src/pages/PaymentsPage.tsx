@@ -13,6 +13,7 @@ export default function PaymentsPage() {
   const { suppliers, updateSupplier } = useSuppliers();
   const { customers, updateCustomer } = useCustomers();
   const { payments, addPayment } = usePayments();
+  const { addToWallet } = useWallet();
 
   const [entityType, setEntityType] = useState<'customer' | 'supplier'>('customer');
   const [entityId, setEntityId] = useState('');
