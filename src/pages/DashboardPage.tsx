@@ -1,7 +1,7 @@
 import { useSuppliers, useCustomers, useInventory, useInvoices, useWallet } from '@/store/useStore';
 import { formatCurrency } from '@/lib/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Truck, Users, Package, FileText } from 'lucide-react';
+import { Truck, Users, Package, FileText, Wallet } from 'lucide-react';
 import { formatDate, getStatusColor } from '@/lib/formatters';
 import { Badge } from '@/components/ui/badge';
 
