@@ -1,14 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useSuppliers, useInvoices } from '@/store/useStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrency, getPaymentStatus } from '@/lib/formatters';
 import { Plus, Trash2 } from 'lucide-react';
-import { InvoiceItem } from '@/types';
+import { Invoice, InvoiceItem } from '@/types';
 import { toast } from 'sonner';
+import InvoicePreview from '@/components/InvoicePreview';
 
 export default function PurchaseInvoicePage() {
   const { suppliers, updateSupplier } = useSuppliers();

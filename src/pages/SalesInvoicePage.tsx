@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrency, getPaymentStatus } from '@/lib/formatters';
 import { Plus, Trash2 } from 'lucide-react';
-import { InvoiceItem } from '@/types';
+import { Invoice, InvoiceItem } from '@/types';
 import { toast } from 'sonner';
+import InvoicePreview from '@/components/InvoicePreview';
 
 export default function SalesInvoicePage() {
   const { customers, updateCustomer } = useCustomers();
