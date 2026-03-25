@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSuppliers, useCustomers, usePayments } from '@/store/useStore';
+import { useSuppliers, useCustomers, usePayments, useWallet } from '@/store/useStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ export default function PaymentsPage() {
   const { suppliers, updateSupplier } = useSuppliers();
   const { customers, updateCustomer } = useCustomers();
   const { payments, addPayment } = usePayments();
+  const { addToWallet } = useWallet();
 
   const [entityType, setEntityType] = useState<'customer' | 'supplier'>('customer');
   const [entityId, setEntityId] = useState('');
@@ -34,6 +35,7 @@ export default function PaymentsPage() {
         return;
       }
       updateCustomer(entityId, { balance: customer.balance - amt });
+      addToWallet(amt);
       addPayment({
         date: new Date().toISOString(),
         entityType: 'customer',
@@ -42,7 +44,7 @@ export default function PaymentsPage() {
         amount: amt,
         note,
       });
-      toast.success(`تم تسجيل سداد ${formatCurrency(amt)} من ${customer.name}`);
+      toast.success(`تم تسجيل تحصيل ${formatCurrency(amt)} من ${customer.name} وإضافته للمحفظة`);
     } else {
       const supplier = suppliers.find(s => s.id === entityId);
       if (!supplier) return;

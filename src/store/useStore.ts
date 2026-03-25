@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Supplier, Customer, InventoryItem, Invoice, Payment } from '@/types';
+import { Supplier, Customer, InventoryItem, Invoice, Payment, Expense } from '@/types';
 
 function loadFromStorage<T>(key: string, defaultValue: T): T {
   try {
@@ -114,4 +114,30 @@ export function usePayments() {
   }, []);
 
   return { payments, addPayment };
+}
+
+export function useWallet() {
+  const [wallet, setWallet] = useState<number>(() => loadFromStorage('fox_wallet', 0));
+  useEffect(() => saveToStorage('fox_wallet', wallet), [wallet]);
+
+  const addToWallet = useCallback((amount: number) => {
+    setWallet(prev => prev + amount);
+  }, []);
+
+  const deductFromWallet = useCallback((amount: number) => {
+    setWallet(prev => Math.max(0, prev - amount));
+  }, []);
+
+  return { wallet, addToWallet, deductFromWallet };
+}
+
+export function useExpenses() {
+  const [expenses, setExpenses] = useState<Expense[]>(() => loadFromStorage('fox_expenses', []));
+  useEffect(() => saveToStorage('fox_expenses', expenses), [expenses]);
+
+  const addExpense = useCallback((e: Omit<Expense, 'id'>) => {
+    setExpenses(prev => [...prev, { ...e, id: crypto.randomUUID() }]);
+  }, []);
+
+  return { expenses, addExpense };
 }

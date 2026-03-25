@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Truck, Package, FileText, CreditCard, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, Truck, Package, FileText, CreditCard, Menu, X, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { path: '/purchase-invoice', label: 'فاتورة شراء', icon: FileText },
   { path: '/sales-invoice', label: 'فاتورة بيع', icon: FileText },
   { path: '/payments', label: 'التحصيل والسداد', icon: CreditCard },
+  { path: '/wallet', label: 'المحفظة', icon: Wallet },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

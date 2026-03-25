@@ -1,7 +1,7 @@
-import { useSuppliers, useCustomers, useInventory, useInvoices } from '@/store/useStore';
+import { useSuppliers, useCustomers, useInventory, useInvoices, useWallet } from '@/store/useStore';
 import { formatCurrency } from '@/lib/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Truck, Users, Package, FileText } from 'lucide-react';
+import { Truck, Users, Package, FileText, Wallet } from 'lucide-react';
 import { formatDate, getStatusColor } from '@/lib/formatters';
 import { Badge } from '@/components/ui/badge';
 
@@ -10,6 +10,7 @@ export default function DashboardPage() {
   const { customers } = useCustomers();
   const { inventory } = useInventory();
   const { invoices } = useInvoices();
+  const { wallet } = useWallet();
 
   const totalCustomerDebt = customers.reduce((sum, c) => sum + c.balance, 0);
   const totalSupplierDebt = suppliers.reduce((sum, s) => sum + s.balance, 0);
@@ -17,10 +18,11 @@ export default function DashboardPage() {
   const recentInvoices = [...invoices].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
   const stats = [
+    { title: 'رصيد المحفظة', value: formatCurrency(wallet), icon: Wallet, color: 'text-primary' },
     { title: 'ديون العملاء', value: formatCurrency(totalCustomerDebt), icon: Users, color: 'text-destructive' },
     { title: 'ديون الموردين', value: formatCurrency(totalSupplierDebt), icon: Truck, color: 'text-warning' },
-    { title: 'المنتجات في المخزن', value: `${totalInventoryItems} منتج`, icon: Package, color: 'text-primary' },
-    { title: 'إجمالي الفواتير', value: `${invoices.length} فاتورة`, icon: FileText, color: 'text-accent' },
+    { title: 'المنتجات في المخزن', value: `${totalInventoryItems} منتج`, icon: Package, color: 'text-accent' },
+    { title: 'إجمالي الفواتير', value: `${invoices.length} فاتورة`, icon: FileText, color: 'text-muted-foreground' },
   ];
 
   return (
