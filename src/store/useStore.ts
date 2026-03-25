@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Supplier, Customer, InventoryItem, Invoice, Payment } from '@/types';
+import { Supplier, Customer, InventoryItem, Invoice, Payment, Expense } from '@/types';
 
 function loadFromStorage<T>(key: string, defaultValue: T): T {
   try {
