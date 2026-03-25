@@ -20,6 +20,7 @@ export default function PurchaseInvoicePage() {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [qty, setQty] = useState('');
   const [paid, setPaid] = useState('');
+  const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
 
   const supplier = useMemo(() => suppliers.find(s => s.id === supplierId), [suppliers, supplierId]);
 
