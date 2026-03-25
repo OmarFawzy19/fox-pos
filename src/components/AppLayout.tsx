@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Truck, Package, FileText, CreditCard, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, Truck, Package, FileText, CreditCard, Menu, X, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
