@@ -53,7 +53,7 @@ export default function PurchaseInvoicePage() {
     const paidAmount = Number(paid) || 0;
     const status = getPaymentStatus(paidAmount, total);
 
-    addInvoice({
+    const invoice = addInvoice({
       number: getNextNumber('purchase'),
       type: 'purchase',
       date: new Date().toISOString(),
@@ -72,6 +72,7 @@ export default function PurchaseInvoicePage() {
     }
 
     toast.success('تم إنشاء فاتورة الشراء بنجاح');
+    setPreviewInvoice(invoice);
     setSupplierId(''); setItems([]); setPaid('');
   };
 
