@@ -10,6 +10,7 @@ import InventoryPage from "@/pages/InventoryPage";
 import PurchaseInvoicePage from "@/pages/PurchaseInvoicePage";
 import SalesInvoicePage from "@/pages/SalesInvoicePage";
 import PaymentsPage from "@/pages/PaymentsPage";
+import WalletPage from "@/pages/WalletPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
