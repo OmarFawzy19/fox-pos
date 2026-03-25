@@ -1,14 +1,15 @@
 import { useState, useMemo } from 'react';
 import { useSuppliers, useInvoices } from '@/store/useStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrency, getPaymentStatus } from '@/lib/formatters';
 import { Plus, Trash2 } from 'lucide-react';
-import { InvoiceItem } from '@/types';
+import { Invoice, InvoiceItem } from '@/types';
 import { toast } from 'sonner';
+import InvoicePreview from '@/components/InvoicePreview';
 
 export default function PurchaseInvoicePage() {
   const { suppliers, updateSupplier } = useSuppliers();
@@ -19,6 +20,7 @@ export default function PurchaseInvoicePage() {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [qty, setQty] = useState('');
   const [paid, setPaid] = useState('');
+  const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
 
   const supplier = useMemo(() => suppliers.find(s => s.id === supplierId), [suppliers, supplierId]);
 
@@ -51,7 +53,7 @@ export default function PurchaseInvoicePage() {
     const paidAmount = Number(paid) || 0;
     const status = getPaymentStatus(paidAmount, total);
 
-    addInvoice({
+    const invoice = addInvoice({
       number: getNextNumber('purchase'),
       type: 'purchase',
       date: new Date().toISOString(),
@@ -70,6 +72,7 @@ export default function PurchaseInvoicePage() {
     }
 
     toast.success('تم إنشاء فاتورة الشراء بنجاح');
+    setPreviewInvoice(invoice);
     setSupplierId(''); setItems([]); setPaid('');
   };
 
@@ -155,6 +158,12 @@ export default function PurchaseInvoicePage() {
           )}
         </CardContent>
       </Card>
+
+      <InvoicePreview
+        invoice={previewInvoice}
+        open={!!previewInvoice}
+        onClose={() => setPreviewInvoice(null)}
+      />
     </div>
   );
 }

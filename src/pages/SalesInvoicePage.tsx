@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrency, getPaymentStatus } from '@/lib/formatters';
 import { Plus, Trash2 } from 'lucide-react';
-import { InvoiceItem } from '@/types';
+import { Invoice, InvoiceItem } from '@/types';
 import { toast } from 'sonner';
+import InvoicePreview from '@/components/InvoicePreview';
 
 export default function SalesInvoicePage() {
   const { customers, updateCustomer } = useCustomers();
@@ -20,6 +21,7 @@ export default function SalesInvoicePage() {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [qty, setQty] = useState('');
   const [paid, setPaid] = useState('');
+  const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
 
   const customer = useMemo(() => customers.find(c => c.id === customerId), [customers, customerId]);
   const availableProducts = inventory.filter(i => i.quantity > 0);
@@ -55,7 +57,7 @@ export default function SalesInvoicePage() {
     const paidAmount = Number(paid) || 0;
     const status = getPaymentStatus(paidAmount, total);
 
-    addInvoice({
+    const invoice = addInvoice({
       number: getNextNumber('sale'),
       type: 'sale',
       date: new Date().toISOString(),
@@ -77,6 +79,7 @@ export default function SalesInvoicePage() {
     }
 
     toast.success('تم إنشاء فاتورة البيع بنجاح');
+    setPreviewInvoice(invoice);
     setCustomerId(''); setItems([]); setPaid('');
   };
 
@@ -162,6 +165,12 @@ export default function SalesInvoicePage() {
           )}
         </CardContent>
       </Card>
+
+      <InvoicePreview
+        invoice={previewInvoice}
+        open={!!previewInvoice}
+        onClose={() => setPreviewInvoice(null)}
+      />
     </div>
   );
 }
