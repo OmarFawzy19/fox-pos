@@ -57,7 +57,7 @@ export default function SalesInvoicePage() {
     const paidAmount = Number(paid) || 0;
     const status = getPaymentStatus(paidAmount, total);
 
-    addInvoice({
+    const invoice = addInvoice({
       number: getNextNumber('sale'),
       type: 'sale',
       date: new Date().toISOString(),
@@ -79,6 +79,7 @@ export default function SalesInvoicePage() {
     }
 
     toast.success('تم إنشاء فاتورة البيع بنجاح');
+    setPreviewInvoice(invoice);
     setCustomerId(''); setItems([]); setPaid('');
   };
 
