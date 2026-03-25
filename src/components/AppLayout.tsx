@@ -12,6 +12,7 @@ const navItems = [
   { path: '/sales-invoice', label: 'فاتورة بيع', icon: FileText },
   { path: '/payments', label: 'التحصيل والسداد', icon: CreditCard },
   { path: '/wallet', label: 'المحفظة', icon: Wallet },
+  { path: '/invoices', label: 'سجل الفواتير', icon: ClipboardList },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
