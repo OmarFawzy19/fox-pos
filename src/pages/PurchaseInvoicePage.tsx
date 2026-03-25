@@ -158,6 +158,12 @@ export default function PurchaseInvoicePage() {
           )}
         </CardContent>
       </Card>
+
+      <InvoicePreview
+        invoice={previewInvoice}
+        open={!!previewInvoice}
+        onClose={() => setPreviewInvoice(null)}
+      />
     </div>
   );
 }
