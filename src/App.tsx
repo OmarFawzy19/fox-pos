@@ -11,6 +11,7 @@ import PurchaseInvoicePage from "@/pages/PurchaseInvoicePage";
 import SalesInvoicePage from "@/pages/SalesInvoicePage";
 import PaymentsPage from "@/pages/PaymentsPage";
 import WalletPage from "@/pages/WalletPage";
+import InvoicesPage from "@/pages/InvoicesPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
