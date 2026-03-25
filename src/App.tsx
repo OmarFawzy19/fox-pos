@@ -11,6 +11,7 @@ import PurchaseInvoicePage from "@/pages/PurchaseInvoicePage";
 import SalesInvoicePage from "@/pages/SalesInvoicePage";
 import PaymentsPage from "@/pages/PaymentsPage";
 import WalletPage from "@/pages/WalletPage";
+import InvoicesPage from "@/pages/InvoicesPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/sales-invoice" element={<SalesInvoicePage />} />
             <Route path="/payments" element={<PaymentsPage />} />
             <Route path="/wallet" element={<WalletPage />} />
+            <Route path="/invoices" element={<InvoicesPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>
