@@ -10,6 +10,7 @@ export default function DashboardPage() {
   const { customers } = useCustomers();
   const { inventory } = useInventory();
   const { invoices } = useInvoices();
+  const { wallet } = useWallet();
 
   const totalCustomerDebt = customers.reduce((sum, c) => sum + c.balance, 0);
   const totalSupplierDebt = suppliers.reduce((sum, s) => sum + s.balance, 0);
@@ -17,10 +18,11 @@ export default function DashboardPage() {
   const recentInvoices = [...invoices].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
   const stats = [
+    { title: 'رصيد المحفظة', value: formatCurrency(wallet), icon: Wallet, color: 'text-primary' },
     { title: 'ديون العملاء', value: formatCurrency(totalCustomerDebt), icon: Users, color: 'text-destructive' },
     { title: 'ديون الموردين', value: formatCurrency(totalSupplierDebt), icon: Truck, color: 'text-warning' },
-    { title: 'المنتجات في المخزن', value: `${totalInventoryItems} منتج`, icon: Package, color: 'text-primary' },
-    { title: 'إجمالي الفواتير', value: `${invoices.length} فاتورة`, icon: FileText, color: 'text-accent' },
+    { title: 'المنتجات في المخزن', value: `${totalInventoryItems} منتج`, icon: Package, color: 'text-accent' },
+    { title: 'إجمالي الفواتير', value: `${invoices.length} فاتورة`, icon: FileText, color: 'text-muted-foreground' },
   ];
 
   return (
