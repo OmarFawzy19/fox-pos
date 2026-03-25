@@ -21,6 +21,7 @@ export default function SalesInvoicePage() {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [qty, setQty] = useState('');
   const [paid, setPaid] = useState('');
+  const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
 
   const customer = useMemo(() => customers.find(c => c.id === customerId), [customers, customerId]);
   const availableProducts = inventory.filter(i => i.quantity > 0);
