@@ -1,4 +1,4 @@
-import { useSuppliers, useCustomers, useInventory, useInvoices } from '@/store/useStore';
+import { useSuppliers, useCustomers, useInventory, useInvoices, useWallet } from '@/store/useStore';
 import { formatCurrency } from '@/lib/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Truck, Users, Package, FileText } from 'lucide-react';
