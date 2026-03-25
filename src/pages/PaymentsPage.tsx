@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSuppliers, useCustomers, usePayments } from '@/store/useStore';
+import { useSuppliers, useCustomers, usePayments, useWallet } from '@/store/useStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
