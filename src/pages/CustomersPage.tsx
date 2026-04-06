@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCustomers } from '@/store/useStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { Plus, Trash2, Edit } from 'lucide-react';
 
 export default function CustomersPage() {
   const { customers, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
+  const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -61,7 +63,7 @@ export default function CustomersPage() {
       ) : (
         <div className="grid gap-4">
           {customers.map(c => (
-            <Card key={c.id}>
+            <Card key={c.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/customers/${c.id}/statement`)}>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div>
@@ -71,7 +73,7 @@ export default function CustomersPage() {
                       الرصيد (دين): <span className="font-bold text-destructive">{formatCurrency(c.balance)}</span>
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}><Edit className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => deleteCustomer(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                   </div>

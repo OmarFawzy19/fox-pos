@@ -21,11 +21,15 @@ export default function SalesInvoicePage() {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [qty, setQty] = useState('');
   const [paid, setPaid] = useState('');
+  const [discount, setDiscount] = useState('');
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
 
   const customer = useMemo(() => customers.find(c => c.id === customerId), [customers, customerId]);
   const availableProducts = inventory.filter(i => i.quantity > 0);
-  const total = useMemo(() => items.reduce((sum, i) => sum + i.total, 0), [items]);
+  const subtotal = useMemo(() => items.reduce((sum, i) => sum + i.total, 0), [items]);
+  const discountPercent = Math.min(100, Math.max(0, Number(discount) || 0));
+  const discountAmount = subtotal * (discountPercent / 100);
+  const total = subtotal - discountAmount;
   const remaining = total - (Number(paid) || 0);
 
   const addItemToInvoice = () => {
@@ -80,7 +84,7 @@ export default function SalesInvoicePage() {
 
     toast.success('تم إنشاء فاتورة البيع بنجاح');
     setPreviewInvoice(invoice);
-    setCustomerId(''); setItems([]); setPaid('');
+    setCustomerId(''); setItems([]); setPaid(''); setDiscount('');
   };
 
   return (
@@ -147,6 +151,23 @@ export default function SalesInvoicePage() {
               )}
 
               <div className="border-t border-border pt-4 space-y-3">
+                <div className="flex justify-between text-base">
+                  <span>المجموع الفرعي</span>
+                  <span>{formatCurrency(subtotal)}</span>
+                </div>
+                <div>
+                  <Label>نسبة الخصم (%)</Label>
+                  <Input value={discount} onChange={e => {
+                    const v = Number(e.target.value);
+                    if (e.target.value === '' || (v >= 0 && v <= 100)) setDiscount(e.target.value);
+                  }} type="number" min="0" max="100" placeholder="0" />
+                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>الخصم ({discountPercent}%)</span>
+                    <span>- {formatCurrency(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-lg font-bold">
                   <span>الإجمالي</span>
                   <span>{formatCurrency(total)}</span>
