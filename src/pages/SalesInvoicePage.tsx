@@ -84,7 +84,7 @@ export default function SalesInvoicePage() {
 
     toast.success('تم إنشاء فاتورة البيع بنجاح');
     setPreviewInvoice(invoice);
-    setCustomerId(''); setItems([]); setPaid('');
+    setCustomerId(''); setItems([]); setPaid(''); setDiscount('');
   };
 
   return (

@@ -63,7 +63,7 @@ export default function CustomersPage() {
       ) : (
         <div className="grid gap-4">
           {customers.map(c => (
-            <Card key={c.id}>
+            <Card key={c.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/customers/${c.id}/statement`)}>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div>
