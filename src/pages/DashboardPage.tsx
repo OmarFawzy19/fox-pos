@@ -1,4 +1,5 @@
-import { useSuppliers, useCustomers, useInventory, useInvoices, useWallet } from '@/store/useStore';
+import { useEffect, useState } from 'react';
+import { CustomersAPI, SuppliersAPI, InventoryAPI, InvoicesAPI, WalletAPI, Customer, Supplier, InventoryItem, Invoice } from '@/lib/api';
 import { formatCurrency } from '@/lib/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Truck, Users, Package, FileText, Wallet } from 'lucide-react';
@@ -6,11 +7,23 @@ import { formatDate, getStatusColor } from '@/lib/formatters';
 import { Badge } from '@/components/ui/badge';
 
 export default function DashboardPage() {
-  const { suppliers } = useSuppliers();
-  const { customers } = useCustomers();
-  const { inventory } = useInventory();
-  const { invoices } = useInvoices();
-  const { wallet } = useWallet();
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [wallet, setWallet] = useState(0);
+
+  useEffect(() => {
+    Promise.all([
+      CustomersAPI.list(),
+      SuppliersAPI.list(),
+      InventoryAPI.list(),
+      InvoicesAPI.list(),
+      WalletAPI.get(),
+    ]).then(([c, s, inv, invs, w]) => {
+      setCustomers(c); setSuppliers(s); setInventory(inv); setInvoices(invs); setWallet(w.balance);
+    });
+  }, []);
 
   const totalCustomerDebt = customers.reduce((sum, c) => sum + c.balance, 0);
   const totalSupplierDebt = suppliers.reduce((sum, s) => sum + s.balance, 0);
@@ -28,7 +41,6 @@ export default function DashboardPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-foreground mb-6">لوحة التحكم</h1>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((stat, i) => (
           <Card key={i}>
@@ -46,9 +58,7 @@ export default function DashboardPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>آخر الفواتير</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>آخر الفواتير</CardTitle></CardHeader>
         <CardContent>
           {recentInvoices.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">لا توجد فواتير بعد</p>

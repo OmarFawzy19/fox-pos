@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCustomers } from '@/store/useStore';
+import { CustomersAPI, Customer } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,30 +10,39 @@ import { formatCurrency } from '@/lib/formatters';
 import { Plus, Trash2, Edit } from 'lucide-react';
 
 export default function CustomersPage() {
-  const { customers, addCustomer, updateCustomer, deleteCustomer } = useCustomers();
   const navigate = useNavigate();
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
 
+  const load = async () => setCustomers(await CustomersAPI.list());
+  useEffect(() => { load(); }, []);
+
   const resetForm = () => { setName(''); setPhone(''); setAddress(''); setEditingId(null); };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) return;
     if (editingId) {
-      updateCustomer(editingId, { name, phone, address });
+      await CustomersAPI.update(editingId, { name, phone, address });
     } else {
-      addCustomer({ name, phone, address });
+      await CustomersAPI.add({ name, phone, address });
     }
+    await load();
     resetForm();
     setDialogOpen(false);
   };
 
-  const handleEdit = (c: typeof customers[0]) => {
+  const handleEdit = (c: Customer) => {
     setEditingId(c.id); setName(c.name); setPhone(c.phone); setAddress(c.address);
     setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    await CustomersAPI.delete(id);
+    await load();
   };
 
   return (
@@ -75,7 +84,7 @@ export default function CustomersPage() {
                   </div>
                   <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}><Edit className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteCustomer(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                   </div>
                 </div>
               </CardContent>

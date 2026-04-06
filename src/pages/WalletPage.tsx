@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useWallet, useExpenses, usePayments } from '@/store/useStore';
+import { useState, useEffect } from 'react';
+import { WalletAPI, PaymentsAPI, Payment, Expense } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,41 +12,34 @@ import { Wallet, TrendingUp, TrendingDown, Receipt } from 'lucide-react';
 const EXPENSE_CATEGORIES = ['نقل', 'إيجار', 'عمالة', 'صيانة', 'كهرباء ومياه', 'مواد تعبئة', 'أخرى'];
 
 export default function WalletPage() {
-  const { wallet, deductFromWallet } = useWallet();
-  const { expenses, addExpense } = useExpenses();
-  const { payments } = usePayments();
-
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [category, setCategory] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
 
-  const handleAddExpense = () => {
-    const amt = Number(amount);
-    if (!category || !amt || amt <= 0) {
-      toast.error('يرجى إدخال بيانات صحيحة');
-      return;
-    }
-    if (amt > wallet) {
-      toast.error('المبلغ أكبر من رصيد المحفظة');
-      return;
-    }
+  const load = async () => {
+    const [w, e, p] = await Promise.all([WalletAPI.get(), WalletAPI.listExpenses(), PaymentsAPI.list()]);
+    setWalletBalance(w.balance); setExpenses(e); setPayments(p);
+  };
+  useEffect(() => { load(); }, []);
 
-    deductFromWallet(amt);
-    addExpense({
-      date: new Date().toISOString(),
-      category,
-      amount: amt,
-      note: note || undefined,
-    });
+  const handleAddExpense = async () => {
+    const amt = Number(amount);
+    if (!category || !amt || amt <= 0) { toast.error('يرجى إدخال بيانات صحيحة'); return; }
+    if (amt > walletBalance) { toast.error('المبلغ أكبر من رصيد المحفظة'); return; }
+    await WalletAPI.deduct(amt);
+    await WalletAPI.addExpense({ date: new Date().toISOString(), category, amount: amt, note: note || undefined });
     toast.success(`تم تسجيل مصروف ${formatCurrency(amt)} - ${category}`);
     setCategory(''); setAmount(''); setNote('');
+    await load();
   };
 
   const customerPayments = payments.filter(p => p.entityType === 'customer');
   const totalCollected = customerPayments.reduce((sum, p) => sum + p.amount, 0);
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
-  // Combined history sorted by date
   const history = [
     ...customerPayments.map(p => ({ type: 'income' as const, date: p.date, amount: p.amount, label: `تحصيل من ${p.entityName}`, note: p.note })),
     ...expenses.map(e => ({ type: 'expense' as const, date: e.date, amount: e.amount, label: e.category, note: e.note })),
@@ -55,79 +48,39 @@ export default function WalletPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-foreground mb-6">المحفظة</h1>
-
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">رصيد المحفظة</p>
-              <p className="text-2xl font-bold text-primary mt-1">{formatCurrency(wallet)}</p>
-            </div>
-            <Wallet className="w-10 h-10 text-primary opacity-80" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">إجمالي التحصيلات</p>
-              <p className="text-2xl font-bold text-accent mt-1">{formatCurrency(totalCollected)}</p>
-            </div>
-            <TrendingUp className="w-10 h-10 text-accent opacity-80" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">إجمالي المصروفات</p>
-              <p className="text-2xl font-bold text-destructive mt-1">{formatCurrency(totalExpenses)}</p>
-            </div>
-            <TrendingDown className="w-10 h-10 text-destructive opacity-80" />
-          </CardContent>
-        </Card>
+        <Card><CardContent className="p-6 flex items-center justify-between">
+          <div><p className="text-sm text-muted-foreground">رصيد المحفظة</p><p className="text-2xl font-bold text-primary mt-1">{formatCurrency(walletBalance)}</p></div>
+          <Wallet className="w-10 h-10 text-primary opacity-80" />
+        </CardContent></Card>
+        <Card><CardContent className="p-6 flex items-center justify-between">
+          <div><p className="text-sm text-muted-foreground">إجمالي التحصيلات</p><p className="text-2xl font-bold text-accent mt-1">{formatCurrency(totalCollected)}</p></div>
+          <TrendingUp className="w-10 h-10 text-accent opacity-80" />
+        </CardContent></Card>
+        <Card><CardContent className="p-6 flex items-center justify-between">
+          <div><p className="text-sm text-muted-foreground">إجمالي المصروفات</p><p className="text-2xl font-bold text-destructive mt-1">{formatCurrency(totalExpenses)}</p></div>
+          <TrendingDown className="w-10 h-10 text-destructive opacity-80" />
+        </CardContent></Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Add Expense */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Receipt className="w-5 h-5" />
-              تسجيل مصروف
-            </CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Receipt className="w-5 h-5" />تسجيل مصروف</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label>التصنيف</Label>
+            <div><Label>التصنيف</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger><SelectValue placeholder="اختر التصنيف..." /></SelectTrigger>
-                <SelectContent>
-                  {EXPENSE_CATEGORIES.map(cat => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectContent>{EXPENSE_CATEGORIES.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-
-            <div>
-              <Label>المبلغ (ج.م)</Label>
-              <Input value={amount} onChange={e => setAmount(e.target.value)} type="number" placeholder="0" />
-            </div>
-
-            <div>
-              <Label>ملاحظات</Label>
-              <Input value={note} onChange={e => setNote(e.target.value)} placeholder="ملاحظات (اختياري)" />
-            </div>
-
+            <div><Label>المبلغ (ج.م)</Label><Input value={amount} onChange={e => setAmount(e.target.value)} type="number" placeholder="0" /></div>
+            <div><Label>ملاحظات</Label><Input value={note} onChange={e => setNote(e.target.value)} placeholder="ملاحظات (اختياري)" /></div>
             <Button onClick={handleAddExpense} className="w-full" variant="destructive">تسجيل المصروف</Button>
           </CardContent>
         </Card>
 
-        {/* History */}
         <Card>
-          <CardHeader>
-            <CardTitle>سجل المحفظة</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>سجل المحفظة</CardTitle></CardHeader>
           <CardContent>
             {history.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">لا توجد حركات بعد</p>

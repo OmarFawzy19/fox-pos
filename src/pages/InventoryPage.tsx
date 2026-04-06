@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useInventory } from '@/store/useStore';
+import { useState, useEffect } from 'react';
+import { InventoryAPI, InventoryItem } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { formatCurrency } from '@/lib/formatters';
 import { Plus, Trash2, Edit } from 'lucide-react';
 
 export default function InventoryPage() {
-  const { inventory, addItem, updateItem, deleteItem } = useInventory();
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -17,23 +17,32 @@ export default function InventoryPage() {
   const [purchasePrice, setPurchasePrice] = useState('');
   const [salePrice, setSalePrice] = useState('');
 
+  const load = async () => setInventory(await InventoryAPI.list());
+  useEffect(() => { load(); }, []);
+
   const resetForm = () => { setName(''); setQuantity(''); setPurchasePrice(''); setSalePrice(''); setEditingId(null); };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim() || !quantity || !salePrice) return;
     if (editingId) {
-      updateItem(editingId, { name, quantity: Number(quantity), purchasePrice: Number(purchasePrice), salePrice: Number(salePrice) });
+      await InventoryAPI.update(editingId, { name, quantity: Number(quantity), purchasePrice: Number(purchasePrice), salePrice: Number(salePrice) });
     } else {
-      addItem({ name, quantity: Number(quantity), purchasePrice: Number(purchasePrice), salePrice: Number(salePrice) });
+      await InventoryAPI.add({ name, quantity: Number(quantity), purchasePrice: Number(purchasePrice), salePrice: Number(salePrice) });
     }
+    await load();
     resetForm();
     setDialogOpen(false);
   };
 
-  const handleEdit = (item: typeof inventory[0]) => {
+  const handleEdit = (item: InventoryItem) => {
     setEditingId(item.id); setName(item.name); setQuantity(String(item.quantity));
     setPurchasePrice(String(item.purchasePrice)); setSalePrice(String(item.salePrice));
     setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    await InventoryAPI.delete(id);
+    await load();
   };
 
   return (
@@ -83,7 +92,7 @@ export default function InventoryPage() {
                   <td className="py-3 px-4">
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}><Edit className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteItem(item.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                     </div>
                   </td>
                 </tr>

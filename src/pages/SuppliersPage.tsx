@@ -1,16 +1,15 @@
-import { useState } from 'react';
-import { useSuppliers } from '@/store/useStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { SuppliersAPI, Supplier, SupplierProduct } from '@/lib/api';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/formatters';
 import { Plus, Trash2, Edit, Package } from 'lucide-react';
-import { SupplierProduct } from '@/types';
 
 export default function SuppliersPage() {
-  const { suppliers, addSupplier, updateSupplier, deleteSupplier } = useSuppliers();
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -20,36 +19,41 @@ export default function SuppliersPage() {
   const [prodName, setProdName] = useState('');
   const [prodPrice, setProdPrice] = useState('');
 
+  const load = async () => setSuppliers(await SuppliersAPI.list());
+  useEffect(() => { load(); }, []);
+
   const resetForm = () => {
     setName(''); setPhone(''); setAddress(''); setProducts([]); setProdName(''); setProdPrice('');
     setEditingId(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) return;
     if (editingId) {
-      updateSupplier(editingId, { name, phone, address, products });
+      await SuppliersAPI.update(editingId, { name, phone, address, products });
     } else {
-      addSupplier({ name, phone, address, products });
+      await SuppliersAPI.add({ name, phone, address, products });
     }
+    await load();
     resetForm();
     setDialogOpen(false);
   };
 
-  const handleEdit = (s: typeof suppliers[0]) => {
+  const handleEdit = (s: Supplier) => {
     setEditingId(s.id); setName(s.name); setPhone(s.phone); setAddress(s.address);
     setProducts([...s.products]);
     setDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    await SuppliersAPI.delete(id);
+    await load();
   };
 
   const addProduct = () => {
     if (!prodName.trim() || !prodPrice) return;
     setProducts(prev => [...prev, { id: crypto.randomUUID(), name: prodName, purchasePrice: Number(prodPrice) }]);
     setProdName(''); setProdPrice('');
-  };
-
-  const removeProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
   };
 
   return (
@@ -65,19 +69,9 @@ export default function SuppliersPage() {
               <DialogTitle>{editingId ? 'تعديل مورد' : 'إضافة مورد جديد'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label>اسم المورد</Label>
-                <Input value={name} onChange={e => setName(e.target.value)} placeholder="اسم المورد" />
-              </div>
-              <div>
-                <Label>رقم الهاتف</Label>
-                <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="رقم الهاتف" />
-              </div>
-              <div>
-                <Label>العنوان</Label>
-                <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="العنوان" />
-              </div>
-
+              <div><Label>اسم المورد</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="اسم المورد" /></div>
+              <div><Label>رقم الهاتف</Label><Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="رقم الهاتف" /></div>
+              <div><Label>العنوان</Label><Input value={address} onChange={e => setAddress(e.target.value)} placeholder="العنوان" /></div>
               <div className="border-t border-border pt-4">
                 <Label className="text-base font-semibold">المنتجات (مواد خام)</Label>
                 <div className="flex gap-2 mt-2">
@@ -90,13 +84,12 @@ export default function SuppliersPage() {
                     {products.map(p => (
                       <div key={p.id} className="flex items-center justify-between bg-muted rounded-md px-3 py-2">
                         <span className="text-sm">{p.name} - {formatCurrency(p.purchasePrice)}</span>
-                        <button onClick={() => removeProduct(p.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></button>
+                        <button onClick={() => setProducts(prev => prev.filter(x => x.id !== p.id))}><Trash2 className="w-4 h-4 text-destructive" /></button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-
               <Button onClick={handleSave} className="w-full">{editingId ? 'حفظ التعديلات' : 'إضافة المورد'}</Button>
             </div>
           </DialogContent>
@@ -124,7 +117,7 @@ export default function SuppliersPage() {
                   </div>
                   <div className="flex gap-2">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(s)}><Edit className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteSupplier(s.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(s.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                   </div>
                 </div>
               </CardContent>
