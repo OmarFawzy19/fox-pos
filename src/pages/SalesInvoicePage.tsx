@@ -151,6 +151,23 @@ export default function SalesInvoicePage() {
               )}
 
               <div className="border-t border-border pt-4 space-y-3">
+                <div className="flex justify-between text-base">
+                  <span>المجموع الفرعي</span>
+                  <span>{formatCurrency(subtotal)}</span>
+                </div>
+                <div>
+                  <Label>نسبة الخصم (%)</Label>
+                  <Input value={discount} onChange={e => {
+                    const v = Number(e.target.value);
+                    if (e.target.value === '' || (v >= 0 && v <= 100)) setDiscount(e.target.value);
+                  }} type="number" min="0" max="100" placeholder="0" />
+                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>الخصم ({discountPercent}%)</span>
+                    <span>- {formatCurrency(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-lg font-bold">
                   <span>الإجمالي</span>
                   <span>{formatCurrency(total)}</span>
