@@ -73,7 +73,7 @@ export default function CustomersPage() {
                       الرصيد (دين): <span className="font-bold text-destructive">{formatCurrency(c.balance)}</span>
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}><Edit className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => deleteCustomer(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                   </div>
