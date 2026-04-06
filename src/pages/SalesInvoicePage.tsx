@@ -21,11 +21,15 @@ export default function SalesInvoicePage() {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [qty, setQty] = useState('');
   const [paid, setPaid] = useState('');
+  const [discount, setDiscount] = useState('');
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
 
   const customer = useMemo(() => customers.find(c => c.id === customerId), [customers, customerId]);
   const availableProducts = inventory.filter(i => i.quantity > 0);
-  const total = useMemo(() => items.reduce((sum, i) => sum + i.total, 0), [items]);
+  const subtotal = useMemo(() => items.reduce((sum, i) => sum + i.total, 0), [items]);
+  const discountPercent = Math.min(100, Math.max(0, Number(discount) || 0));
+  const discountAmount = subtotal * (discountPercent / 100);
+  const total = subtotal - discountAmount;
   const remaining = total - (Number(paid) || 0);
 
   const addItemToInvoice = () => {
