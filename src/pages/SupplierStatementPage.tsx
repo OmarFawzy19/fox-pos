@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CustomersAPI, InvoicesAPI, PaymentsAPI, Customer, Invoice, Payment } from '@/lib/api';
+import { SuppliersAPI, InvoicesAPI, PaymentsAPI, Supplier, Invoice, Payment } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,9 @@ interface StatementEntry {
   remaining: number;
 }
 
-export default function CustomerStatementPage() {
+export default function SupplierStatementPage() {
   const { id } = useParams<{ id: string }>();
-  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,11 +32,11 @@ export default function CustomerStatementPage() {
   useEffect(() => {
     if (!id) return;
     Promise.all([
-      CustomersAPI.list(),
+      SuppliersAPI.list(),
       InvoicesAPI.list(),
       PaymentsAPI.list(),
-    ]).then(([customers, invs, pays]) => {
-      setCustomer(customers.find(c => c.id === id) ?? null);
+    ]).then(([suppliers, invs, pays]) => {
+      setSupplier(suppliers.find(s => s.id === id) ?? null);
       setInvoices(invs);
       setPayments(pays);
       setLoading(false);
@@ -47,9 +47,9 @@ export default function CustomerStatementPage() {
     if (!id) return [];
     let items: StatementEntry[] = [];
 
-    // Sales invoices for this customer
+    // Purchase invoices from this supplier
     invoices
-      .filter(inv => inv.type === 'sale' && inv.entityId === id)
+      .filter(inv => inv.type === 'purchase' && inv.entityId === id)
       .forEach(inv => {
         items.push({
           date: inv.date,
@@ -61,9 +61,9 @@ export default function CustomerStatementPage() {
         });
       });
 
-    // Payments made by this customer
+    // Payments made to this supplier
     payments
-      .filter(p => p.entityType === 'customer' && p.entityId === id)
+      .filter(p => p.entityType === 'supplier' && p.entityId === id)
       .forEach(p => {
         items.push({
           date: p.date,
@@ -81,31 +81,33 @@ export default function CustomerStatementPage() {
 
   // Apply filters and calculate running balance
   const displayEntries = useMemo(() => {
-    let runningBalance = 0; // Positive means they owe us (Debt).
-    
+    let runningBalance = 0; // Negative means we owe them, positive means they owe us (if overpaid). But usually statement is Debit/Credit.
+    // For a supplier: Invoice increases how much we owe them (Credit). Payment decreases how much we owe them (Debit).
+    // Let's treat our Balance to them: Balance = Sum(Invoices) - Sum(Payments)
+
     return allEntries.map(entry => {
-      let debit = 0;  // Invoice to customer (increases debt)
-      let credit = 0; // Payment from customer (decreases debt)
+      let debit = 0; // Payment to supplier
+      let credit = 0; // Invoice from supplier
 
       if (entry.type === 'invoice') {
-        debit = entry.total;
-        credit = entry.paid; // If part of the invoice was paid immediately
+        credit = entry.total;
+        debit = entry.paid; // If part of the invoice was paid immediately
       } else {
-        credit = entry.total; // Independent payment
+        debit = entry.total; // Independent payment
       }
 
-      runningBalance += (debit - credit);
+      runningBalance += (credit - debit);
 
       return { ...entry, runningBalance };
     })
-    .filter(entry => {
-      // Apply filters on the display list but KEEP the running balance correct
-      if (dateFrom && entry.date < dateFrom) return false;
-      if (dateTo && entry.date > dateTo) return false;
-      if (typeFilter === 'invoices' && entry.type !== 'invoice') return false;
-      if (typeFilter === 'payments' && entry.type !== 'payment') return false;
-      return true;
-    });
+      .filter(entry => {
+        // Apply filters on the display list but KEEP the running balance correct
+        if (dateFrom && entry.date < dateFrom) return false;
+        if (dateTo && entry.date > dateTo) return false;
+        if (typeFilter === 'invoices' && entry.type !== 'invoice') return false;
+        if (typeFilter === 'payments' && entry.type !== 'payment') return false;
+        return true;
+      });
   }, [allEntries, dateFrom, dateTo, typeFilter]);
 
   const summary = useMemo(() => {
@@ -124,11 +126,11 @@ export default function CustomerStatementPage() {
     return <div className="text-center py-12 text-muted-foreground">جاري التحميل...</div>;
   }
 
-  if (!customer) {
+  if (!supplier) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">العميل غير موجود</p>
-        <Link to="/customers"><Button variant="outline" className="mt-4">العودة للعملاء</Button></Link>
+        <p className="text-muted-foreground">المورد غير موجود</p>
+        <Link to="/suppliers"><Button variant="outline" className="mt-4">العودة للموردين</Button></Link>
       </div>
     );
   }
@@ -138,12 +140,12 @@ export default function CustomerStatementPage() {
       {/* Header section */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Link to="/customers" className="no-print">
+          <Link to="/suppliers" className="no-print">
             <Button variant="ghost" size="icon"><ArrowRight className="w-5 h-5" /></Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">كشف حساب عميل: {customer.name}</h1>
-            <p className="text-sm text-muted-foreground">{customer.phone} • {customer.address}</p>
+            <h1 className="text-2xl font-bold text-foreground">كشف حساب مورد: {supplier.name}</h1>
+            <p className="text-sm text-muted-foreground">{supplier.phone} • {supplier.address}</p>
           </div>
         </div>
         <Button onClick={handlePrint} className="no-print gap-2">
@@ -156,19 +158,19 @@ export default function CustomerStatementPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-sm text-muted-foreground">إجمالي الفواتير (مبيعات)</p>
+            <p className="text-sm text-muted-foreground">إجمالي الفواتير (مشتريات)</p>
             <p className="text-xl font-bold text-foreground">{formatCurrency(summary.totalInvoices)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-sm text-muted-foreground">إجمالي المدفوعات (وارد)</p>
+            <p className="text-sm text-muted-foreground">إجمالي المدفوعات (صادر)</p>
             <p className="text-xl font-bold text-foreground">{formatCurrency(summary.totalPaid)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-sm text-muted-foreground">الرصيد المتبقي (لنا)</p>
+            <p className="text-sm text-muted-foreground">الرصيد المتبقي (علينا)</p>
             <p className={`text-xl font-bold ${summary.remaining > 0 ? 'text-destructive' : 'text-foreground'}`}>
               {formatCurrency(summary.remaining)}
             </p>
@@ -181,18 +183,18 @@ export default function CustomerStatementPage() {
         <CardContent className="p-4 flex flex-wrap gap-4 items-end">
           <div>
             <label className="block text-sm font-medium mb-1">من تاريخ</label>
-            <input type="date" className="border rounded bg-transparent p-2 text-sm max-w-[150px]" 
-                   value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+            <input type="date" className="border rounded bg-transparent p-2 text-sm max-w-[150px]"
+              value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">إلى تاريخ</label>
-            <input type="date" className="border rounded bg-transparent p-2 text-sm max-w-[150px]" 
-                   value={dateTo} onChange={e => setDateTo(e.target.value)} />
+            <input type="date" className="border rounded bg-transparent p-2 text-sm max-w-[150px]"
+              value={dateTo} onChange={e => setDateTo(e.target.value)} />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">النوع</label>
-            <select className="border rounded bg-transparent p-2 text-sm" 
-                    value={typeFilter} onChange={e => setTypeFilter(e.target.value as any)}>
+            <select className="border rounded bg-transparent p-2 text-sm"
+              value={typeFilter} onChange={e => setTypeFilter(e.target.value as any)}>
               <option value="all">الكل</option>
               <option value="invoices">فقط الفواتير</option>
               <option value="payments">فقط المدفوعات</option>
@@ -228,13 +230,13 @@ export default function CustomerStatementPage() {
                     <TableCell>{formatDate(entry.date)}</TableCell>
                     <TableCell>
                       <Badge variant={entry.type === 'invoice' ? 'default' : 'secondary'}>
-                        {entry.type === 'invoice' ? 'فاتورة مبيعات' : 'دفعة من العميل'}
+                        {entry.type === 'invoice' ? 'فاتورة شراء' : 'دفعة للمورد'}
                       </Badge>
                     </TableCell>
                     <TableCell>{entry.invoiceNumber ?? '—'}</TableCell>
                     <TableCell>{entry.type === 'invoice' ? formatCurrency(entry.total) : '—'}</TableCell>
                     <TableCell>{formatCurrency(entry.paid)}</TableCell>
-                    <TableCell className={`font-bold ${entry.runningBalance > 0 ? 'text-destructive' : ''}`}>
+                    <TableCell className="font-bold">
                       {formatCurrency(entry.runningBalance)}
                     </TableCell>
                   </TableRow>

@@ -50,8 +50,19 @@ export const InvoicesAPI = {
 };
 
 // ── Payments ───────────────────────────────────────────────────────────────
+export interface PaymentsFilter { sort?: 'desc' | 'asc'; clientId?: string; supplierId?: string; }
+
 export const PaymentsAPI = {
-  list: () => req<Payment[]>("/payments"),
+  list: (params?: PaymentsFilter) => {
+    // Strip empty values
+    const queryParams = new URLSearchParams();
+    if (params?.sort) queryParams.append('sort', params.sort);
+    if (params?.clientId) queryParams.append('clientId', params.clientId);
+    if (params?.supplierId) queryParams.append('supplierId', params.supplierId);
+    
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    return req<Payment[]>(`/payments${queryString}`);
+  },
   add: (data: Omit<Payment, "id">) => req<Payment>("/payments", { method: "POST", body: JSON.stringify(data) }),
 };
 
@@ -62,6 +73,15 @@ export const WalletAPI = {
   deduct: (amount: number) => req<void>("/wallet/deduct", { method: "PATCH", body: JSON.stringify({ amount }) }),
   listExpenses: () => req<Expense[]>("/wallet/expenses"),
   addExpense: (data: Omit<Expense, "id">) => req<Expense>("/wallet/expenses", { method: "POST", body: JSON.stringify(data) }),
+};
+
+// ── Settings ───────────────────────────────────────────────────────────────
+export const SettingsAPI = {
+  backup: () => req<{ success: boolean; message: string; filename: string }>("/settings/backup", { method: "POST" }),
+  resetSystem: (password: string) => req<{ success: boolean; message: string }>("/settings/reset-system", { method: "POST", body: JSON.stringify({ password }) }),
+  // for CSV export, it's better to redirect the browser to the URL directly so it downloads the file
+  exportCustomersUrl: `${BASE}/settings/export/customers`,
+  exportSuppliersUrl: `${BASE}/settings/export/suppliers`,
 };
 
 // ── Types ──────────────────────────────────────────────────────────────────

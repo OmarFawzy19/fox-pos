@@ -8,17 +8,23 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/formatters';
 import { Plus, Trash2, Edit } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function CustomersPage() {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
 
-  const load = async () => setCustomers(await CustomersAPI.list());
+  const load = async () => {
+    setLoading(true);
+    setCustomers(await CustomersAPI.list());
+    setLoading(false);
+  };
   useEffect(() => { load(); }, []);
 
   const resetForm = () => { setName(''); setPhone(''); setAddress(''); setEditingId(null); };
@@ -67,8 +73,14 @@ export default function CustomersPage() {
         </Dialog>
       </div>
 
-      {customers.length === 0 ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">لا يوجد عملاء بعد</CardContent></Card>
+      {loading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+      ) : customers.length === 0 ? (
+        <Card className="border-2 border-dashed shadow-none"><CardContent className="py-12 text-center text-muted-foreground">لا يوجد بيانات حالياً</CardContent></Card>
       ) : (
         <div className="grid gap-4">
           {customers.map(c => (

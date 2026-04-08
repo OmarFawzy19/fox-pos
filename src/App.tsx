@@ -13,6 +13,7 @@ import PaymentsPage from "@/pages/PaymentsPage";
 import WalletPage from "@/pages/WalletPage";
 import InvoicesPage from "@/pages/InvoicesPage";
 import CustomerStatementPage from "@/pages/CustomerStatementPage";
+import SupplierStatementPage from "@/pages/SupplierStatementPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/suppliers" element={<SuppliersPage />} />
+            <Route path="/suppliers/:id/statement" element={<SupplierStatementPage />} />
             <Route path="/customers" element={<CustomersPage />} />
             <Route path="/customers/:id/statement" element={<CustomerStatementPage />} />
             <Route path="/inventory" element={<InventoryPage />} />

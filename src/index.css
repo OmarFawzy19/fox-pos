@@ -63,3 +63,20 @@
     @apply bg-background text-foreground font-tajawal antialiased;
   }
 }
+
+@media print {
+  aside, nav, header, .no-print {
+    display: none !important;
+  }
+
+  main, .print-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  @page {
+    margin: 1cm;
+  }
+}

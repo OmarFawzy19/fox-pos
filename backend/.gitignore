@@ -1,0 +1,5 @@
+node_modules/
+fox_pos.db
+*.db-shm
+*.db-wal
+.env

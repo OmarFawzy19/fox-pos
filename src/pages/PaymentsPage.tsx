@@ -9,20 +9,40 @@ import { formatCurrency, formatDate } from '@/lib/formatters';
 import { toast } from 'sonner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { Skeleton } from '@/components/ui/skeleton';
+
 export default function PaymentsPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Add Payment forms
   const [entityType, setEntityType] = useState<'customer' | 'supplier'>('customer');
   const [entityId, setEntityId] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
 
+  // Filtering list
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [filterType, setFilterType] = useState<'all' | 'customer' | 'supplier'>('all');
+  const [filterEntityId, setFilterEntityId] = useState('');
+
   const load = async () => {
-    const [c, s, p] = await Promise.all([CustomersAPI.list(), SuppliersAPI.list(), PaymentsAPI.list()]);
+    setLoading(true);
+    const filterObj: any = { sort: sortOrder };
+    if (filterType === 'customer' && filterEntityId) filterObj.clientId = filterEntityId;
+    if (filterType === 'supplier' && filterEntityId) filterObj.supplierId = filterEntityId;
+
+    const [c, s, p] = await Promise.all([
+      CustomersAPI.list(), 
+      SuppliersAPI.list(), 
+      PaymentsAPI.list(filterObj)
+    ]);
     setCustomers(c); setSuppliers(s); setPayments(p);
+    setLoading(false);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [sortOrder, filterType, filterEntityId]);
 
   const entities = entityType === 'customer' ? customers.filter(c => c.balance > 0) : suppliers.filter(s => s.balance > 0);
   const selectedEntity = entityType === 'customer' ? customers.find(c => c.id === entityId) : suppliers.find(s => s.id === entityId);
@@ -79,11 +99,55 @@ export default function PaymentsPage() {
         <Card>
           <CardHeader><CardTitle>سجل المدفوعات</CardTitle></CardHeader>
           <CardContent>
-            {payments.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">لا توجد مدفوعات بعد</p>
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+              <div className="flex-1">
+                <Select value={sortOrder} onValueChange={(v: 'desc'|'asc') => setSortOrder(v)}>
+                  <SelectTrigger><SelectValue placeholder="ترتيب" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="desc">الأحدث للأقدم</SelectItem>
+                    <SelectItem value="asc">الأقدم للأحدث</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1">
+                <Select value={filterType} onValueChange={(v: 'all'|'customer'|'supplier') => { setFilterType(v); setFilterEntityId(''); }}>
+                  <SelectTrigger><SelectValue placeholder="فلتر بالنوع" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">كل المعاملات</SelectItem>
+                    <SelectItem value="customer">عميل محدد</SelectItem>
+                    <SelectItem value="supplier">مورد محدد</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {filterType !== 'all' && (
+                <div className="flex-1 hidden sm:block">
+                  <Select value={filterEntityId} onValueChange={setFilterEntityId}>
+                    <SelectTrigger><SelectValue placeholder="اختر الاسم..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_entities">الكل</SelectItem>
+                      {filterType === 'customer' 
+                        ? customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)
+                        : suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            {loading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : payments.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground border-2 border-dashed border-border rounded-lg">
+                <p>لا توجد بيانات مطابقة للبحث</p>
+              </div>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto">
-                {[...payments].reverse().map(p => (
+                {payments.map(p => (
                   <div key={p.id} className="bg-muted rounded-lg p-3">
                     <div className="flex justify-between items-start">
                       <div>

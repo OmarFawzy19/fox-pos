@@ -87,7 +87,7 @@ export default function InvoicePreview({ invoice, open, onClose }: InvoicePrevie
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, paddingBottom: 20, borderBottom: '3px solid hsl(220, 60%, 22%)' }}>
               <div>
-                <div style={{ fontSize: 32, fontWeight: 800, color: 'hsl(220, 60%, 22%)' }}>فوكس</div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: 'hsl(220, 60%, 22%)' }}>fox</div>
                 <div style={{ fontSize: 16, color: '#888', marginTop: 4 }}>
                   {invoice.type === 'purchase' ? 'فاتورة شراء' : 'فاتورة بيع'}
                 </div>
@@ -154,7 +154,7 @@ export default function InvoicePreview({ invoice, open, onClose }: InvoicePrevie
                 fontSize: 14,
                 ...(invoice.status === 'مدفوع' ? { background: '#d4edda', color: '#155724' } :
                   invoice.status === 'جزئي' ? { background: '#fff3cd', color: '#856404' } :
-                  { background: '#f8d7da', color: '#721c24' })
+                    { background: '#f8d7da', color: '#721c24' })
               }}>
                 حالة الدفع: {invoice.status}
               </span>

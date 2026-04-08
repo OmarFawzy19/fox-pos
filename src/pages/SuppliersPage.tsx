@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SuppliersAPI, Supplier, SupplierProduct } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,9 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/formatters';
 import { Plus, Trash2, Edit, Package } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SuppliersPage() {
+  const navigate = useNavigate();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -19,7 +23,11 @@ export default function SuppliersPage() {
   const [prodName, setProdName] = useState('');
   const [prodPrice, setProdPrice] = useState('');
 
-  const load = async () => setSuppliers(await SuppliersAPI.list());
+  const load = async () => {
+    setLoading(true);
+    setSuppliers(await SuppliersAPI.list());
+    setLoading(false);
+  };
   useEffect(() => { load(); }, []);
 
   const resetForm = () => {
@@ -96,12 +104,18 @@ export default function SuppliersPage() {
         </Dialog>
       </div>
 
-      {suppliers.length === 0 ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">لا يوجد موردين بعد</CardContent></Card>
+      {loading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      ) : suppliers.length === 0 ? (
+        <Card className="border-2 border-dashed shadow-none"><CardContent className="py-12 text-center text-muted-foreground">لا يوجد بيانات حالياً</CardContent></Card>
       ) : (
         <div className="grid gap-4">
           {suppliers.map(s => (
-            <Card key={s.id}>
+            <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/suppliers/${s.id}/statement`)}>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div>
@@ -115,7 +129,7 @@ export default function SuppliersPage() {
                       الرصيد (دين): <span className="font-bold text-destructive">{formatCurrency(s.balance)}</span>
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2" onClick={e => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(s)}><Edit className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(s.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                   </div>
